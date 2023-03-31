@@ -19,9 +19,7 @@ jobs:
 
     steps:
       - name: Checkout 🛎️
-        uses: actions/checkout@master
-        with:
-          persist-credentials: false
+        uses: actions/checkout@v3
 
       - name: Get yarn cache
         id: yarn-cache
