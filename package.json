@@ -1,7 +1,8 @@
 {
-  "name": "portifolio",
+  "name": "vivaldomp-portfolio",
   "type": "module",
-  "version": "0.0.1",
+  "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -10,6 +11,6 @@
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^2.1.8"
+    "astro": "^6.2.2"
   }
 }

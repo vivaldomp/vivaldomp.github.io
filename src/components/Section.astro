@@ -1,0 +1,73 @@
+---
+export interface Props {
+  id: string;
+  eyebrow: string;
+  title: string;
+  lead?: string;
+}
+const { id, eyebrow, title, lead } = Astro.props;
+---
+
+<section id={id}>
+  <div class="head">
+    <span class="eyebrow"><span class="dot"></span>{eyebrow}</span>
+    <h2>{title}</h2>
+    {lead && <p class="lead">{lead}</p>}
+  </div>
+  <slot />
+</section>
+
+<style>
+  section {
+    position: relative;
+    padding: 96px 0;
+    z-index: 1;
+  }
+  section + :global(section) {
+    border-top: 1px solid var(--border);
+  }
+  .head {
+    max-width: 720px;
+    margin: 0 auto 56px;
+    text-align: center;
+    padding: 0 24px;
+  }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .dot {
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent);
+  }
+  h2 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .lead {
+    color: var(--text-muted);
+    font-size: 17px;
+    line-height: 1.65;
+  }
+  @media (max-width: 640px) {
+    section {
+      padding: 72px 0;
+    }
+    .head {
+      margin-bottom: 40px;
+    }
+  }
+</style>

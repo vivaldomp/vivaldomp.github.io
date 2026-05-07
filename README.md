@@ -10,7 +10,7 @@
 
 <div align="center">
     <a href="https://vivaldo.github.io/">
-        <img src="/sample.png"
+        <img src="sample.png"
            alt="Sample screenshot"
            title="Go to site"
            width="500" />

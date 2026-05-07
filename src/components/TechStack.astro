@@ -1,0 +1,98 @@
+---
+import Section from './Section.astro';
+
+const groups = [
+  {
+    name: 'Languages',
+    items: [
+      { label: 'TypeScript', src: 'https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white' },
+      { label: 'JavaScript', src: 'https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black' },
+      { label: 'Go', src: 'https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white' },
+      { label: 'Java', src: 'https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=openjdk&logoColor=white' },
+      { label: 'Node.js', src: 'https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white' },
+    ],
+  },
+  {
+    name: 'Cloud & Infra',
+    items: [
+      { label: 'AWS', src: 'https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonwebservices&logoColor=white' },
+      { label: 'Kubernetes', src: 'https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white' },
+      { label: 'Docker', src: 'https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white' },
+      { label: 'Terraform', src: 'https://img.shields.io/badge/Terraform-844FBA?style=for-the-badge&logo=terraform&logoColor=white' },
+      { label: 'GitHub Actions', src: 'https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white' },
+    ],
+  },
+  {
+    name: 'Frameworks & Tooling',
+    items: [
+      { label: 'Astro', src: 'https://img.shields.io/badge/Astro-BC52EE?style=for-the-badge&logo=astro&logoColor=white' },
+      { label: 'Angular', src: 'https://img.shields.io/badge/Angular-DD0031?style=for-the-badge&logo=angular&logoColor=white' },
+      { label: 'React', src: 'https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB' },
+      { label: 'Gin', src: 'https://img.shields.io/badge/Gin-008ECF?style=for-the-badge&logo=gin&logoColor=white' },
+      { label: 'GitHub Copilot', src: 'https://img.shields.io/badge/GitHub_Copilot-1F2328?style=for-the-badge&logo=githubcopilot&logoColor=white' },
+    ],
+  },
+  {
+    name: 'AI / Engineering',
+    items: [
+      { label: 'MCP', src: 'https://img.shields.io/badge/Model_Context_Protocol-000000?style=for-the-badge&logo=anthropic&logoColor=white' },
+      { label: 'LLMs / RAG', src: 'https://img.shields.io/badge/LLMs_%26_RAG-7C3AED?style=for-the-badge&logo=openai&logoColor=white' },
+      { label: 'Prompt Engineering', src: 'https://img.shields.io/badge/Prompt_Engineering-10A37F?style=for-the-badge&logo=openai&logoColor=white' },
+      { label: 'Spec-Driven Dev', src: 'https://img.shields.io/badge/Spec--Driven_Dev-22D3EE?style=for-the-badge&logo=jsonwebtokens&logoColor=white' },
+    ],
+  },
+];
+---
+
+<Section
+  id="stack"
+  eyebrow="Tech stack"
+  title="Tools I reach for"
+  lead="Drawn from active GitHub projects and current certifications."
+>
+  <div class="container">
+    {groups.map((g) => (
+      <div class="group">
+        <h3>{g.name}</h3>
+        <div class="badges">
+          {g.items.map((it) => (
+            <img src={it.src} alt={`${it.label} badge`} loading="lazy" decoding="async" />
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+</Section>
+
+<style>
+  .container {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .group + .group {
+    margin-top: 36px;
+  }
+  h3 {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-dim);
+    margin-bottom: 16px;
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .badges img {
+    height: 30px;
+    transition: transform 0.2s ease;
+    filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  }
+  .badges img:hover {
+    transform: translateY(-2px) scale(1.04);
+  }
+</style>

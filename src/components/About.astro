@@ -1,0 +1,144 @@
+---
+import Section from './Section.astro';
+
+const highlights = [
+  { label: 'Currently', value: 'IT Manager @ Banco do Brasil' },
+  { label: 'Based in', value: 'Brasília, Brazil' },
+  { label: 'Focus', value: 'AI-augmented Engineering' },
+  { label: 'Education', value: 'BSc Information Systems' },
+];
+---
+
+<Section
+  id="about"
+  eyebrow="About"
+  title="Industrializing software in the AI era"
+>
+  <div class="container">
+    <div class="grid">
+      <div class="prose">
+        <p>
+          I'm a <strong>software engineer with 20+ years of experience</strong> building internal
+          platforms, developer tooling, and cloud-native architectures. Lately my work has shifted
+          toward <strong>platformization</strong> and <strong>AI-augmented development</strong> —
+          designing systems that turn manual coding into spec-driven, automated pipelines.
+        </p>
+        <p>
+          I'm fascinated by how we can <em>industrialize software delivery</em> — reducing
+          variability and production errors through deterministic pipelines, rule engines,
+          template-driven generation, and controlled execution environments.
+        </p>
+        <p>
+          Beyond the tech, I value <strong>knowledge sharing</strong> and building systems that
+          scale not only technically, but organizationally.
+        </p>
+      </div>
+
+      <aside class="card">
+        <div class="terminal-bar">
+          <span></span><span></span><span></span>
+          <span class="path">~/profile.json</span>
+        </div>
+        <ul class="meta">
+          {highlights.map((h) => (
+            <li>
+              <span class="key">{h.label}</span>
+              <span class="value">{h.value}</span>
+            </li>
+          ))}
+        </ul>
+      </aside>
+    </div>
+  </div>
+</Section>
+
+<style>
+  .container {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  .prose p {
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+  }
+  .prose p:last-child { margin-bottom: 0; }
+  .prose strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .prose em {
+    color: var(--accent);
+    font-style: normal;
+  }
+
+  .card {
+    background: linear-gradient(180deg, var(--surface) 0%, var(--surface-2) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(0, 0, 0, 0.2);
+  }
+  .terminal-bar > span:not(.path) {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--surface-2);
+  }
+  .terminal-bar > span:nth-child(1) { background: #ff5f57; }
+  .terminal-bar > span:nth-child(2) { background: #febc2e; }
+  .terminal-bar > span:nth-child(3) { background: #28c840; }
+  .path {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .meta {
+    list-style: none;
+    margin: 0;
+    padding: 8px 0;
+  }
+  .meta li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 20px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .meta li + li {
+    border-top: 1px dashed var(--border);
+  }
+  .key {
+    color: var(--text-dim);
+  }
+  .value {
+    color: var(--accent);
+    text-align: right;
+  }
+
+  @media (max-width: 880px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+  }
+</style>
