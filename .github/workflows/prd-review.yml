@@ -1,0 +1,53 @@
+name: SDLC 03 - AI Review (Pi + OpenCode Go)
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+permissions:
+  contents: read
+  pull-requests: write
+concurrency:
+  group: prd-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  review:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'ai/prd-')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+      - name: Install Pi + pi-lens
+        run: bash scripts/sdlc/setup-pi.sh
+      - name: Fetch review context
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p .sdlc-work
+          gh pr view "$PR_NUMBER" --json number,title,body,baseRefName,headRefName > .sdlc-work/pr.json
+          gh pr diff "$PR_NUMBER" > .sdlc-work/pr.diff
+          # Issue reference is advisory. The review must not claim that unverified criteria passed.
+      - name: AI review (read-only, no GitHub credentials)
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          SDLC_MODEL: ${{ vars.SDLC_MODEL || 'opencode-go/deepseek-v4.1-flash' }}
+        run: |
+          test -n "$OPENCODE_API_KEY" || { echo 'Missing OPENCODE_API_KEY'; exit 1; }
+          pi --model "$SDLC_MODEL" --no-session --tools read,grep,find,ls,lens_diagnostics --print \
+            @.github/agents/prd-reviewer.md @.sdlc-work/pr.json \
+            @.sdlc-work/pr.diff \
+            'Independently review this PR. Output Markdown review, no approval.' \
+            > .sdlc-work/review.md
+          test -s .sdlc-work/review.md
+      - name: Publish review as a comment (NOT APPROVE)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr comment "$PR_NUMBER" --body-file .sdlc-work/review.md

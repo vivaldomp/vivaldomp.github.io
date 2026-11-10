@@ -1,0 +1,122 @@
+name: SDLC - Preview + Playwright MCP Visual Audit (Pi/OpenCode Go)
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+concurrency:
+  group: sdlc-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  screenshot:
+    # Never run a model with repository secrets for fork PRs or arbitrary branch names.
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      startsWith(github.event.pull_request.head.ref, 'ai/prd-')
+    permissions:
+      contents: read
+    outputs:
+      preview_url: ${{ steps.screenshots.outputs.artifact-url }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+      - name: Install project dependencies
+        run: bash scripts/sdlc/install.sh
+      - name: Build Astro preview
+        env:
+          SDLC_PREVIEW_DIR: dist
+        run: node scripts/sdlc/prepare-preview.mjs
+      - name: Install Chromium for deterministic screenshots and MCP
+        run: npx --yes playwright@1.56.1 install --with-deps chromium
+      - name: Serve preview only on loopback
+        shell: bash
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 --directory .sdlc-preview > /tmp/sdlc-http.log 2>&1 &
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ -o /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/sdlc-http.log
+          exit 1
+      - name: Capture deterministic desktop/mobile screenshots
+        run: |
+          mkdir -p sdlc-screenshots .sdlc-work
+          npx --yes playwright@1.56.1 screenshot --browser chromium --full-page --viewport-size '1440,900' --wait-for-timeout 1500 http://127.0.0.1:4173/ sdlc-screenshots/desktop.png
+          npx --yes playwright@1.56.1 screenshot --browser chromium --full-page --viewport-size '390,844' --wait-for-timeout 1500 http://127.0.0.1:4173/ sdlc-screenshots/mobile.png
+      - name: Capture structured screenshot evidence
+        env:
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node scripts/sdlc/evidence.mjs
+      - name: Install Pi + pi-lens package
+        run: bash scripts/sdlc/setup-pi.sh
+      - name: Register Playwright MCP in ephemeral Pi user config
+        run: bash scripts/sdlc/setup-playwright-mcp.sh
+      - name: Inspect running site using Pi + Playwright MCP
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          SDLC_MODEL: ${{ vars.SDLC_MODEL || 'opencode-go/deepseek-v4.1-flash' }}
+        shell: bash
+        run: |
+          test -n "$OPENCODE_API_KEY" || { echo 'Missing OPENCODE_API_KEY'; exit 1; }
+          pi --model "$SDLC_MODEL" --no-session --print \
+            --tools read,grep,find,ls,lens_diagnostics,mcp__playwright__browser_navigate,mcp__playwright__browser_snapshot,mcp__playwright__browser_resize,mcp__playwright__browser_take_screenshot,mcp__playwright__browser_console_messages \
+            @.github/agents/prd-visual-reviewer.md @sdlc-screenshots/evidence.json \
+            'Use Playwright MCP on http://127.0.0.1:4173/ to inspect accessibility snapshots and runtime console at desktop and mobile sizes. Call browser_take_screenshot twice with filenames mcp-desktop.png and mcp-mobile.png. Do not navigate external sites. Report findings in Portuguese with severity and concrete evidence; do not claim human approval.' \
+            > sdlc-screenshots/visual-audit.md
+          test -s sdlc-screenshots/visual-audit.md
+          node scripts/sdlc/check-mcp-preview.mjs
+      - name: Upload screenshot + MCP audit bundle
+        id: screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-${{ github.event.pull_request.number }}-visual-preview
+          path: sdlc-screenshots/
+          retention-days: 14
+          if-no-files-found: error
+  comment:
+    needs: screenshot
+    if: needs.screenshot.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Publish preview evidence link
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ needs.screenshot.outputs.preview_url }}
+          PREVIEW_SHA: ${{ github.event.pull_request.head.sha }}
+        with:
+          script: |
+            const marker = '<!-- sdlc-screenshot-preview -->';
+            const body = [
+              marker,
+              '### 📸 Preview + Playwright MCP + Pi Lens',
+              '',
+              `- [Baixar evidências: desktop/mobile, screenshots via MCP e parecer agêntico](${process.env.PREVIEW_URL})`,
+              `- SHA validado: ${process.env.PREVIEW_SHA}`,
+              '- Desktop: 1440×900; mobile: 390×844.',
+              '- O parecer de IA **não equivale a aprovação humana**.',
+              '',
+              '**Checklist para merge manual:** [ ] Screenshot desktop [ ] Screenshot mobile [ ] Parecer agêntico [ ] Acessibilidade [ ] Critérios do PRD [ ] CI.'
+            ].join('\n');
+            const {owner, repo} = context.repo;
+            const issue_number = context.issue.number;
+            const comments = await github.paginate(github.rest.issues.listComments, {owner, repo, issue_number});
+            const previous = comments.find(c => c.user?.type === 'Bot' && c.body?.includes(marker));
+            if(previous) await github.rest.issues.updateComment({owner,repo,comment_id:previous.id,body});
+            else await github.rest.issues.createComment({owner,repo,issue_number,body});
+      - name: Actions summary
+        env:
+          PREVIEW_URL: ${{ needs.screenshot.outputs.preview_url }}
+        run: |
+          echo '## Preview (MCP + Pi)' >> "$GITHUB_STEP_SUMMARY"
+          echo "[Download evidence]($PREVIEW_URL)" >> "$GITHUB_STEP_SUMMARY"

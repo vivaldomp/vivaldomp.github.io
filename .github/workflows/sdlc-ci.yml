@@ -1,0 +1,26 @@
+name: SDLC - CI / Project Validation
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [master]
+permissions:
+  contents: read
+concurrency:
+  group: sdlc-ci-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install project dependencies
+        run: bash scripts/sdlc/install.sh
+      - name: Verify agentic SDLC configuration
+        run: npm run sdlc:validate
+      - name: Run checks and build smoke-test
+        run: node scripts/sdlc/validate-project.mjs

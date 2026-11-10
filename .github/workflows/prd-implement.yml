@@ -1,0 +1,92 @@
+name: SDLC 02 - Implement Approved PRD (Pi + OpenCode Go)
+on:
+  issues:
+    types: [labeled]
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+concurrency:
+  group: prd-implement-${{ github.event.issue.number }}
+  cancel-in-progress: false
+jobs:
+  implement:
+    if: >-
+      github.actor == 'vivaldomp' &&
+      github.event.label.name == 'sdlc:approved' &&
+      contains(github.event.issue.labels.*.name, 'prd') &&
+      github.event.issue.user.login == 'vivaldomp'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+      BRANCH: ai/prd-${{ github.event.issue.number }}-${{ github.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+      - name: Install project
+        run: bash scripts/sdlc/install.sh
+      - name: Install Pi + pi-lens
+        run: bash scripts/sdlc/setup-pi.sh
+      - name: Obtain approved issue and human-reviewed plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .sdlc-work
+          gh issue view "$ISSUE_NUMBER" --json number,title,body,labels,state > .sdlc-work/issue.json
+          gh api "repos/${GITHUB_REPOSITORY}/issues/${ISSUE_NUMBER}/comments" --paginate --jq '.[].body' \
+            > .sdlc-work/issue-comments.txt
+          git switch -c "$BRANCH"
+      - name: Run Pi developer (no GitHub write credentials)
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          SDLC_MODEL: ${{ vars.SDLC_MODEL || 'opencode-go/deepseek-v4.1-flash' }}
+        run: |
+          test -n "$OPENCODE_API_KEY" || { echo 'Missing OPENCODE_API_KEY'; exit 1; }
+          pi --model "$SDLC_MODEL" --no-session \
+            --tools read,grep,find,ls,bash,edit,write,lens_diagnostics --print \
+            @.github/agents/prd-developer.md @.sdlc-work/issue.json \
+            @.sdlc-work/issue-comments.txt \
+            'Implement only the approved PRD; report your changes and tests. Do not push code.' \
+            > .sdlc-work/implementation.md
+          test -s .sdlc-work/implementation.md
+      - name: Assert agent path policy
+        run: node scripts/sdlc/check-agent-changes.mjs
+      - name: Run deterministic tests and Astro build
+        run: |
+          npm test
+          npm run build
+      - name: Commit and open draft PR (separate write-token step)
+        env:
+          GH_TOKEN: ${{ secrets.SDLC_BOT_TOKEN }}
+        run: |
+          test -n "$GH_TOKEN" || { echo 'Missing SDLC_BOT_TOKEN. See setup guide.'; exit 1; }
+          node scripts/sdlc/check-agent-changes.mjs
+          git config user.name 'sdlc-pi-bot'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m "feat: implement approved PRD #${ISSUE_NUMBER}"
+          gh auth setup-git
+          git push -u origin "HEAD:refs/heads/${BRANCH}"
+          {
+            printf 'Implements the human-approved PRD. Refs #%s\n\n' "$ISSUE_NUMBER"
+            printf '## Implementation summary\n\n'
+            cat .sdlc-work/implementation.md
+            printf '\n\n## Human checks\n- [ ] CI passing\n- [ ] Review Playwright desktop/mobile screenshots\n- [ ] Review code and acceptance criteria\n- [ ] Merge manually to master\n'
+          } > .sdlc-work/pr-body.md
+          gh pr create --base master --head "$BRANCH" --draft \
+            --title "[PRD #${ISSUE_NUMBER}] Implementation" \
+            --body-file .sdlc-work/pr-body.md
+      - name: Retain agent summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prd-${{ github.event.issue.number }}-implementation
+          path: .sdlc-work/implementation.md
+          retention-days: 14
+          if-no-files-found: ignore
