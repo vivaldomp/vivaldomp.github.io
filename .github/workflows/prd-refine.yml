@@ -1,7 +1,7 @@
 name: SDLC 01 - Refine PRD (Pi + OpenCode Go)
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
 permissions:
   contents: read
   issues: write
@@ -12,8 +12,7 @@ jobs:
   refine:
     if: >-
       github.event.issue.user.login == 'vivaldomp' &&
-      contains(github.event.issue.labels.*.name, 'prd') &&
-      (github.event.action == 'opened' || github.event.label.name == 'prd')
+      github.event.label.name == 'prd'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
