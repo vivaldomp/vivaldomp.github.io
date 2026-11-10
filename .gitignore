@@ -20,3 +20,10 @@ pnpm-debug.log*
 # macOS-specific files
 .DS_Store
 .claude
+
+# local SDLC preview build and artifacts
+.sdlc-preview/
+sdlc-screenshots/
+
+# transient context and agent outputs
+.sdlc-work/

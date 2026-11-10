@@ -9,7 +9,7 @@
 ## Preview
 
 <div align="center">
-    <a href="https://vivaldo.github.io/">
+    <a href="https://vivaldomp.github.io/">
         <img src="sample.png"
            alt="Sample screenshot"
            title="Go to site"
@@ -24,3 +24,7 @@ The original repo is available [MIT License](https://opensource.org/licenses/MIT
 Content and styling has been customized.
 
 Also a refactor was done on the messy non-standard code.
+
+## Agentic SDLC (Pi / OpenCode Go)
+
+The repository includes an optional supervised development workflow using PRD issues, Pi coding agents with OpenCode Go (DeepSeek V4.1 Flash), CI, and Playwright screenshot artifacts. See [the Portuguese setup guide](docs/agentic-sdlc/README.md).

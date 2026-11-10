@@ -1,0 +1,61 @@
+name: "PRD — Mudança no website"
+description: "Solicite uma evolução para vivaldomp.github.io; o Pi fará o refinamento antes da implementação."
+title: "[PRD] "
+labels: ["prd"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Product Requirements Document
+        Escreva os requisitos como regras de produto, não como instruções de shell. **Não inclua credenciais**.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema / oportunidade
+      description: Que problema será resolvido e para quem?
+      placeholder: "Como visitante do portfólio, quero..."
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Escopo e funcionalidades
+      description: O que precisa ser implementado?
+      placeholder: "1. ...\n2. ..."
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Critérios de aceite (Given / When / Then)
+      description: Comportamentos verificáveis, incluindo desktop e mobile.
+      placeholder: "Dado ... Quando ... Então ..."
+    validations:
+      required: true
+  - type: textarea
+    id: design
+    attributes:
+      label: UX / UI / acessibilidade
+      description: Referências visuais, textos, responsividade e WCAG.
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Restrições e fora do escopo
+      description: Bibliotecas proibidas, comportamento legado que precisa permanecer, páginas não afetadas.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências esperadas
+      description: Testes, screenshots e condições para aceitar a entrega.
+      value: |
+        - [ ] Screenshot desktop (1440 × 900)
+        - [ ] Screenshot mobile (390 × 844)
+        - [ ] CI concluído
+        - [ ] Revisão humana da PR
+  - type: checkboxes
+    id: declaration
+    attributes:
+      label: Declaração
+      options:
+        - label: O PRD não contém segredos e não concede ao agente autorização para alterar workflows ou credenciais.
+          required: true
