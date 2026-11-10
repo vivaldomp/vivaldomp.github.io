@@ -175,6 +175,13 @@ const ogImage = new URL('/og-image.svg', Astro.site).toString();
     color: #67e8f9;
   }
 
+  a:focus-visible,
+  button:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
   ::selection {
     background: rgba(34, 211, 238, 0.3);
     color: var(--text);
